@@ -1,0 +1,34 @@
+{
+  "name": "toroserver-bot",
+  "version": "1.0.0",
+  "description": "toroserver's management bot",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint src/**/*.ts",
+    "test": "ts-node src/main.ts",
+    "register": "ts-node src/commands/_register.ts",
+    "start": "node build/main.js",
+    "build": "tsc -p ./"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ruther2525/toroserver-bot.git"
+  },
+  "author": "ruther2525",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/ruther2525/toroserver-bot/issues"
+  },
+  "homepage": "https://github.com/ruther2525/toroserver-bot#readme",
+  "dependencies": {
+    "discord.js": "^14.12.1",
+    "dotenv": "^16.4.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.2"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.3.1",
+    "@typescript-eslint/parser": "^7.3.1",
+    "eslint": "^8.57.0"
+  }
+}
