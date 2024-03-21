@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits } from "discord.js";
 
 import dotenv from "dotenv";
 import { SystemCommand } from "./commands/system";
+import { VC } from "./module/vc";
 
 dotenv.config();
 
@@ -22,5 +23,7 @@ client.once('ready', () => {
 });
 
 SystemCommand(client);
+
+VC(client);
 
 client.login(process.env.TOKEN ?? '');

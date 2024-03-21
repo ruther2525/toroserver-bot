@@ -21,8 +21,10 @@
   },
   "homepage": "https://github.com/ruther2525/toroserver-bot#readme",
   "dependencies": {
+    "@prisma/client": "^5.11.0",
     "discord.js": "^14.12.1",
     "dotenv": "^16.4.5",
+    "prisma": "^5.11.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2"
   },
