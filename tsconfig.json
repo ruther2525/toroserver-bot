@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": "./",
     "paths": {
       "@/*": [
         "./src/*"
@@ -8,10 +9,9 @@
         "./*"
       ],
     },
-    "target": "es2016",
+    "target": "es5",
     "module": "commonjs",
     "outDir": "./build",
-    
     "allowJs": true,
     "noEmit": true,
     "incremental": true,
@@ -21,7 +21,15 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
+    "sourceMap": true,
     "skipLibCheck": true
+  },
+  "ts-node": {
+    "transpileOnly": true,
+    "require": [
+      "typescript-transform-paths/register",
+      "tsconfig-paths/register"
+    ]
   },
   "include": [
     "**/*.ts"

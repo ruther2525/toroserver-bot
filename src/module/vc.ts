@@ -5,10 +5,56 @@ const VCChannels = [];
 
 export const VC = (client: Client) => {
     client.on('voiceStateUpdate', async (oldState, newState) => {
-        if (oldState.channelId === null) {
+        if (oldState.channelId === null && newState.channelId !== null) {
             console.log(`${newState.member?.user.tag} joined ${newState.channel?.name}`);
-        } else if (newState.channelId === null) {
+
+            const _user = await prisma.user.findFirst({
+                where: {
+                    discord_id: newState.member?.id
+                }
+            });
+
+            if (_user) {
+                await prisma.user.update({
+                    where: {
+                        discord_id: _user.discord_id
+                    },
+                    data: {
+                        vc_last_join_time: new Date(),
+                        vc_last_join_channel: newState.channelId
+                    }
+                });
+                console.log(`- User ${newState.member?.user.tag} is in the database.`);
+            } else if (newState.member) {
+                await prisma.user.create({
+                    data: {
+                        discord_id: newState.member.id,
+                        vc_last_join_time: new Date(),
+                        vc_last_join_channel: newState.channelId
+                    }
+                });
+                console.log(`- User ${newState.member?.user.tag} is not in the database.`);
+            }
+        } else if (newState.channelId === null && oldState.channelId !== null) {
             console.log(`${oldState.member?.user.tag} left ${oldState.channel?.name}`);
+
+            const _user = await prisma.user.findFirst({
+                where: {
+                    discord_id: oldState.member?.id
+                }
+            });
+
+            if (_user && _user.vc_last_join_time) {
+                await prisma.user.update({
+                    where: {
+                        discord_id: _user.discord_id
+                    },
+                    data: {
+                        vc_last_leave_time: new Date(),
+                        vc_total_sec: (_user.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - _user.vc_last_join_time.getTime()) / 1000)
+                    }
+                });
+            }
         } else {
             console.log(`${oldState.member?.user.tag} moved from ${oldState.channel?.name} to ${newState.channel?.name}`);
         }
@@ -30,7 +76,7 @@ export const VC = (client: Client) => {
                 VCChannels.push(channel);
                 if (channel.members.size > 0) {
                     console.log(`Members in ${channel.name}:`);
-                    channel.members.forEach(member => {
+                    channel.members.forEach(async member => {
                         console.log(`- ${member.user.tag}`);
 
                         joinnedUser.push(member.id);
@@ -47,7 +93,7 @@ export const VC = (client: Client) => {
                                     && _user.vc_last_join_time < _user.vc_last_leave_time
                                 )
                             ) {
-                                prisma.user.update({
+                                await prisma.user.update({
                                     where: {
                                         discord_id: _user.discord_id
                                     },
@@ -62,7 +108,7 @@ export const VC = (client: Client) => {
                                 && _user.vc_last_join_time < new Date()
                                 && _user.vc_last_join_channel !== channel.id
                             ) {
-                                prisma.user.update({
+                                await prisma.user.update({
                                     where: {
                                         discord_id: _user.discord_id
                                     },
@@ -72,6 +118,16 @@ export const VC = (client: Client) => {
                                     }
                                 });
                             }
+                            // VCに入っているのにデータベースにない場合、データベースに追加
+                        } else {
+                            await prisma.user.create({
+                                data: {
+                                    discord_id: member.id,
+                                    vc_last_join_time: new Date(),
+                                    vc_last_join_channel: channel.id
+                                }
+                            });
+                            console.log(`- User ${member.user.tag} is not in the database.`);
                             // それ以外は何もしない
                         }
                     });
@@ -83,13 +139,13 @@ export const VC = (client: Client) => {
         // Botがダウンしてたときの回復動作2
 
         // 3. ユーザーが最後に退出した時間よりも最後に参加した時間が新しいのに、VCに参加していない場合、最後に退出した時間を現在の時間にセット
-        dbUser.forEach(user => {
+        dbUser.forEach(async user => {
             if (user.vc_last_join_time
                 && user.vc_last_leave_time
                 && user.vc_last_join_time > user.vc_last_leave_time
                 && !joinnedUser.includes(user.discord_id)
             ) {
-                prisma.user.update({
+                await prisma.user.update({
                     where: {
                         discord_id: user.discord_id
                     },
