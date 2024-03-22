@@ -55,8 +55,41 @@ export const VC = (client: Client) => {
                     }
                 });
             }
-        } else {
+        } else if (oldState.channelId !== null && newState.channelId !== null && oldState.channelId !== newState.channelId){
             console.log(`${oldState.member?.user.tag} moved from ${oldState.channel?.name} to ${newState.channel?.name}`);
+
+            const _user = await prisma.user.findFirst({
+                where: {
+                    discord_id: oldState.member?.id
+                }
+            });
+
+            if (_user && _user.vc_last_join_time && _user.vc_last_join_channel) {
+                await prisma.user.update({
+                    where: {
+                        discord_id: _user.discord_id
+                    },
+                    data: {
+                        vc_last_join_channel: newState.channelId,
+                    }
+                });
+            }
+        } else {
+            if (oldState.serverMute !== newState.serverMute) {
+                console.log(`${newState.member?.user.tag} changed serverMute to ${newState.serverMute}`);
+            } else if (oldState.serverDeaf !== newState.serverDeaf) {
+                console.log(`${newState.member?.user.tag} changed serverDeaf to ${newState.serverDeaf}`);
+            } else if (oldState.selfMute !== newState.selfMute) {
+                console.log(`${newState.member?.user.tag} changed selfMute to ${newState.selfMute}`);
+            } else if (oldState.selfDeaf !== newState.selfDeaf) {
+                console.log(`${newState.member?.user.tag} changed selfDeaf to ${newState.selfDeaf}`);
+            } else if (oldState.selfVideo !== newState.selfVideo) {
+                console.log(`${newState.member?.user.tag} changed selfVideo to ${newState.selfVideo}`);
+            } else if (oldState.streaming !== newState.streaming) {
+                console.log(`${newState.member?.user.tag} changed streaming to ${newState.streaming}`);
+            } else {
+                console.log(`${newState.member?.user.tag} changed something else`);
+            }
         }
     });
 
@@ -77,13 +110,12 @@ export const VC = (client: Client) => {
                 if (channel.members.size > 0) {
                     console.log(`Members in ${channel.name}:`);
                     channel.members.forEach(async member => {
-                        console.log(`- ${member.user.tag}`);
 
                         joinnedUser.push(member.id);
-                        
+
                         const _user = dbUser.find(user => user.discord_id === member.id);
                         if (_user) {
-                            console.log(`- User ${member.user.tag} is in the database.`);
+                            console.log(`- ${member.user.tag} is in the database.`);
 
                             // Botがダウンしてたときの回復動作
                             // 1. ユーザーが最後に参加した時間がnullの場合、現在の時間をセット
@@ -101,7 +133,6 @@ export const VC = (client: Client) => {
                                         vc_last_join_time: new Date(),
                                     }
                                 });
-
                             // 2. ユーザーが最後に参加したチャンネルが現在のチャンネルと異なる場合、現在の時間をセット&チャンネルidをセット
                             } else if (
                                 _user.vc_last_join_time
@@ -127,7 +158,7 @@ export const VC = (client: Client) => {
                                     vc_last_join_channel: channel.id
                                 }
                             });
-                            console.log(`- User ${member.user.tag} is not in the database.`);
+                            console.log(`- ${member.user.tag} is not in the database.`);
                             // それ以外は何もしない
                         }
                     });
