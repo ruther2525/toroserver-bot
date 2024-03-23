@@ -17,9 +17,23 @@ datasource db {
 
 model User {
   discord_id    String   @id
+  discord_name  String?
+  discord_avatar String?
+
   vc_last_join_time  DateTime?
   vc_last_join_channel String?
   vc_last_leave_time DateTime?
 
   vc_total_sec Int?
+}
+
+model VCChannel {
+  channel_id String @id
+  channel_name String?
+  category_name String?
+
+  vc_first_join_time DateTime?
+  vc_last_leave_time DateTime?
+  vc_total_sec Int?
+  vc_total_member Int?
 }
