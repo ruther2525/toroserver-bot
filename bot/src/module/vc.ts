@@ -67,6 +67,7 @@ export const VC = (client: Client) => {
                 && _channel.vc_first_join_time !== null
                 && oldState.channelId !== null && newState.channelId === null
                 && oldState.channelId === _channel.channel_id
+                && oldState.channel?.members?.size === 1
             ) {
                 await prisma.vCChannel.update({
                     where: {
