@@ -76,9 +76,27 @@ export default function AppShellNavBar({
             </AppShell.Header>
 
             <AppShell.Navbar py="md" px={4}>
-                {links.map((link) => (
-                    <UnstyledButton key={link.title} className={styles.control}>{link.title}</UnstyledButton>
-                ))}
+                {status === "loading" ? <LoadingOverlay visible zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} /> : <>
+                    {links.map((link) => {
+                        if (link.requireLogin) {
+                            if (status === "authenticated" && session.user.guilds?.length > 0 && session.user.guilds.some((guild: { id: string; }) => guild.id === process.env.NEXT_PUBLIC_GUILD_ID)) {
+                                return link.handler ?
+                                    <UnstyledButton key={link.title} onClick={link.handler} className={styles.control}>{link.title}</UnstyledButton>
+                                    : <UnstyledButton key={link.title} href={link.href} component={Link} className={styles.control}>{link.title}</UnstyledButton>;
+                            } else {
+                                return null;
+                            }
+                        } else {
+                            if (status === "authenticated" && session.user.guilds?.length > 0 && session.user.guilds.some((guild: { id: string; }) => guild.id === process.env.NEXT_PUBLIC_GUILD_ID)) {
+                                return null;
+                            } else {
+                                return link.handler ?
+                                    <UnstyledButton key={link.title} onClick={link.handler} className={styles.control}>{link.title}</UnstyledButton>
+                                    : <UnstyledButton key={link.title} href={link.href} component={Link} className={styles.control}>{link.title}</UnstyledButton>;
+                            }
+                        }
+                    })}
+                </>}
             </AppShell.Navbar>
 
             <AppShell.Main>
