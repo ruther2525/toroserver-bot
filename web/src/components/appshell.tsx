@@ -5,6 +5,7 @@ import styles from "./appshell.module.css";
 import { useDisclosure } from "@mantine/hooks";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 
 
 const links = [
@@ -46,7 +47,15 @@ export default function AppShellNavBar({
                 <Group h="100%" px="md">
                     <Burger opened={mobileMenuOpened} onClick={toggle} hiddenFrom="sm" size="sm" />
                     <Group justify="space-between" style={{ flex: 1 }}>
-                        <UnstyledButton component={Link} href="/" className={styles.logo}>とろサーBot</UnstyledButton>
+                        <UnstyledButton component={Link} href="/" className={styles.logo}>
+                            <Image
+                                src="/toroserver-icon.png"
+                                alt="とろサーBot"
+                                width={30}
+                                height={30}
+                            />
+                            とろサーBot
+                        </UnstyledButton>
                         <Group ml="xl" gap={0} visibleFrom="sm">
                             {status === "loading" ? <>
                                 <Skeleton height={30} width={80} />
@@ -81,8 +90,8 @@ export default function AppShellNavBar({
                         if (link.requireLogin) {
                             if (status === "authenticated" && session.user.guilds?.length > 0 && session.user.guilds.some((guild: { id: string; }) => guild.id === process.env.NEXT_PUBLIC_GUILD_ID)) {
                                 return link.handler ?
-                                    <UnstyledButton key={link.title} onClick={link.handler} className={styles.control}>{link.title}</UnstyledButton>
-                                    : <UnstyledButton key={link.title} href={link.href} component={Link} className={styles.control}>{link.title}</UnstyledButton>;
+                                    <UnstyledButton key={link.title} onClick={() => { toggle(); link.handler(); }} className={styles.control}>{link.title}</UnstyledButton>
+                                    : <UnstyledButton key={link.title} onClick={toggle} href={link.href} component={Link} className={styles.control}>{link.title}</UnstyledButton>;
                             } else {
                                 return null;
                             }
@@ -91,8 +100,8 @@ export default function AppShellNavBar({
                                 return null;
                             } else {
                                 return link.handler ?
-                                    <UnstyledButton key={link.title} onClick={link.handler} className={styles.control}>{link.title}</UnstyledButton>
-                                    : <UnstyledButton key={link.title} href={link.href} component={Link} className={styles.control}>{link.title}</UnstyledButton>;
+                                    <UnstyledButton key={link.title} onClick={() => { toggle(); link.handler(); }} className={styles.control}>{link.title}</UnstyledButton>
+                                    : <UnstyledButton key={link.title} onClick={toggle} href={link.href} component={Link} className={styles.control}>{link.title}</UnstyledButton>;
                             }
                         }
                     })}

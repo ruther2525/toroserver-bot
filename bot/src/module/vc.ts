@@ -108,7 +108,7 @@ export const VC = (client: Client) => {
                         discord_id: _user.discord_id
                     },
                     data: {
-                        discord_name: newState.member?.user.tag,
+                        discord_name: newState.member?.user.tag + (newState.member?.user.bot ? ' [BOT]' : ''),
                         discord_avatar: newState.member?.user.avatarURL() ?? null,
                         vc_last_join_time: new Date(),
                         vc_last_join_channel: newState.channelId
@@ -121,7 +121,7 @@ export const VC = (client: Client) => {
                 await prisma.user.create({
                     data: {
                         discord_id: newState.member.id,
-                        discord_name: newState.member.user.tag,
+                        discord_name: newState.member.user.tag + (newState.member.user.bot ? ' [BOT]' : ''),
                         discord_avatar: newState.member.user.avatarURL() ?? null,
                         vc_last_join_time: new Date(),
                         vc_last_join_channel: newState.channelId
@@ -141,7 +141,7 @@ export const VC = (client: Client) => {
                         discord_id: _user.discord_id
                     },
                     data: {
-                        discord_name: oldState.member?.user.tag,
+                        discord_name: oldState.member?.user.tag + (oldState.member?.user.bot ? ' [BOT]' : ''),
                         discord_avatar: oldState.member?.user.avatarURL() ?? null,
                         vc_last_leave_time: new Date(),
                         vc_total_sec: (_user.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - _user.vc_last_join_time.getTime()) / 1000)
@@ -159,7 +159,7 @@ export const VC = (client: Client) => {
                         discord_id: _user.discord_id
                     },
                     data: {
-                        discord_name: newState.member?.user.tag,
+                        discord_name: newState.member?.user.tag + (newState.member?.user.bot ? ' [BOT]' : ''),
                         discord_avatar: newState.member?.user.avatarURL() ?? null,
                         vc_last_join_channel: newState.channelId,
                     }
@@ -312,7 +312,7 @@ export const VC = (client: Client) => {
                                         discord_id: _user.discord_id
                                     },
                                     data: {
-                                        discord_name: member.user.tag,
+                                        discord_name: member.user.tag + (member.user.bot ? ' [BOT]' : ''),
                                         discord_avatar: member.user.avatarURL() ?? null,
                                         vc_last_join_time: new Date(),
                                     }
@@ -328,7 +328,7 @@ export const VC = (client: Client) => {
                                         discord_id: _user.discord_id
                                     },
                                     data: {
-                                        discord_name: member.user.tag,
+                                        discord_name: member.user.tag + (member.user.bot ? ' [BOT]' : ''),
                                         discord_avatar: member.user.avatarURL() ?? null,
                                         vc_last_join_time: new Date(),
                                         vc_last_join_channel: channel.id,
@@ -340,7 +340,7 @@ export const VC = (client: Client) => {
                             await prisma.user.create({
                                 data: {
                                     discord_id: member.id,
-                                    discord_name: member.user.tag,
+                                    discord_name: member.user.tag + (member.user.bot ? ' [BOT]' : ''),
                                     discord_avatar: member.user.avatarURL() ?? null,
                                     vc_last_join_time: new Date(),
                                     vc_last_join_channel: channel.id,
@@ -358,10 +358,15 @@ export const VC = (client: Client) => {
 
         // 3. ユーザーが最後に退出した時間よりも最後に参加した時間が新しいのに、VCに参加していない場合、最後に退出した時間を現在の時間にセット
         dbUser.forEach(async user => {
-            if (user.vc_last_join_time
-                && user.vc_last_leave_time
-                && user.vc_last_join_time > user.vc_last_leave_time
-                && !joinnedUser.includes(user.discord_id)
+            if (
+                (
+                    user.vc_last_join_time
+                    && user.vc_last_leave_time
+                    && user.vc_last_join_time > user.vc_last_leave_time
+                    && !joinnedUser.includes(user.discord_id)
+                ) || (
+                    user.vc_last_join_time && !user.vc_last_leave_time
+                )
             ) {
                 await prisma.user.update({
                     where: {

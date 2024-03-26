@@ -8,3 +8,13 @@
         background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
     }
 }
+
+.logo {
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    height: 30px;
+    border-radius: 50%;
+}
