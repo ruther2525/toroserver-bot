@@ -46,6 +46,7 @@ export const VC = (client: Client) => {
                     data: {
                         vc_first_join_time: new Date(),
                         vc_total_member: newState.channel?.members?.size ?? null,
+                        category_name: newState.channel?.parent?.name ?? null,
                     }
                 });
 
@@ -58,6 +59,7 @@ export const VC = (client: Client) => {
                     },
                     data: {
                         vc_total_member: newState.channel?.members?.size ?? null,
+                        category_name: newState.channel?.parent?.name ?? null,
                     }
                 });
 
@@ -75,7 +77,8 @@ export const VC = (client: Client) => {
                     },
                     data: {
                         vc_last_leave_time: new Date(),
-                        vc_total_sec: (_channel.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - _channel.vc_first_join_time.getTime()) / 1000)
+                        vc_total_sec: (_channel.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - _channel.vc_first_join_time.getTime()) / 1000),
+                        category_name: newState.channel?.parent?.name ?? null,
                     }
                 });
             }
@@ -236,6 +239,7 @@ export const VC = (client: Client) => {
                             data: {
                                 vc_first_join_time: new Date(),
                                 vc_total_member: channel.members.size,
+                                category_name: channel.parent?.name ?? null,
                             }
                         });
 
@@ -255,6 +259,7 @@ export const VC = (client: Client) => {
                             },
                             data: {
                                 vc_total_member: channel.members.size,
+                                category_name: channel.parent?.name ?? null,
                             }
                         });
 
@@ -271,7 +276,8 @@ export const VC = (client: Client) => {
                             },
                             data: {
                                 vc_last_leave_time: new Date(),
-                                vc_total_sec: (_channel.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - (_channel.vc_first_join_time?.getTime() ?? new Date().getTime())) / 1000)
+                                vc_total_sec: (_channel.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - (_channel.vc_first_join_time?.getTime() ?? new Date().getTime())) / 1000),
+                                category_name: channel.parent?.name ?? null,
                             }
                         });
                     }
@@ -300,10 +306,11 @@ export const VC = (client: Client) => {
                         if (_user) {
                             console.log(`- ${member.user.tag} is in the database.`);
 
-                            // 1. ユーザーが最後に参加した時間がnullの場合、現在の時間をセット
+                            // 1. ユーザーが最後に参加した時間がnullもしくはlast_join_timeのほうが大きい場合、現在の時間をセット
                             if (_user.vc_last_join_time === null
                                 || (
                                     _user.vc_last_leave_time
+                                    && _user.vc_last_join_time
                                     && _user.vc_last_join_time < _user.vc_last_leave_time
                                 )
                             ) {
@@ -317,10 +324,11 @@ export const VC = (client: Client) => {
                                         vc_last_join_time: new Date(),
                                     }
                                 });
-                            // 2. ユーザーが最後に参加したチャンネルが現在のチャンネルと異なる場合、現在の時間をセット&チャンネルidをセット
+                            // 2. ユーザーが最後に参加したチャンネルが現在のチャンネルと異なる場合、退席処理の後入室処理をする
                             } else if (
-                                _user.vc_last_join_time
+                                _user.vc_last_join_time && _user.vc_last_leave_time
                                 && _user.vc_last_join_time < new Date()
+                                && _user.vc_last_join_time > _user.vc_last_leave_time
                                 && _user.vc_last_join_channel !== channel.id
                             ) {
                                 await prisma.user.update({
@@ -332,6 +340,8 @@ export const VC = (client: Client) => {
                                         discord_avatar: member.user.avatarURL() ?? null,
                                         vc_last_join_time: new Date(),
                                         vc_last_join_channel: channel.id,
+                                        vc_last_leave_time: new Date(Date.now() - 1000),
+                                        vc_total_sec: (_user.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - _user.vc_last_join_time.getTime()) / 1000),
                                     }
                                 });
                             }

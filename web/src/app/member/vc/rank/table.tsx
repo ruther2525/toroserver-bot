@@ -19,12 +19,10 @@ export default function RankTable({
     const [dataNowTime, dataNowTimeSet] = useState<{
         discord_name: string | null;
         vc_total_sec: string | null;
-        vc_total_sec_hour: string | null;
         discord_avatar: string | null;
         vc_last_join_time: Date | null;
         vc_last_leave_time: Date | null;
     }[]>([]);
-    const [notFoundSrc, setNotfoundSrc] = useState<string[]>([]);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -38,7 +36,6 @@ export default function RankTable({
                     return {
                         discord_name: isInVC ? user.discord_name + " (📢)" : user.discord_name,
                         vc_total_sec: "データなし",
-                        vc_total_sec_hour: "データなし",
                         discord_avatar: user.discord_avatar,
                         vc_last_join_time: user.vc_last_join_time,
                         vc_last_leave_time: user.vc_last_leave_time,
@@ -48,19 +45,47 @@ export default function RankTable({
                     || joinTime.getTime() > leaveTime.getTime()
                 ) {
                     const count = Math.floor((nowTime.getTime() - joinTime.getTime()) / 1000) + (user.vc_total_sec ?? 0);
+
+                    let sec_str = "";
+                    if (count >= 604800) {
+                        sec_str = Math.floor(count / 604800) + "週";
+                    }
+                    if (count >= 86400) {
+                        sec_str += ( '0' + Math.floor(count % 604800 / 86400)).slice(-1) + "日";
+                    }
+                    if (count >= 3600) {
+                        sec_str += ( '00' + Math.floor(count % 86400 / 3600)).slice(-2) + "時間";
+                    }
+                    if (count >= 60) {
+                        sec_str += ( '00' + Math.floor(count % 3600 / 60)).slice(-2) + "分";
+                    }
+                    sec_str += ( '00' + Math.floor(count % 60)).slice(-2) + "秒";
                     return {
                         discord_name: isInVC ? user.discord_name + " (📢)" : user.discord_name,
-                        vc_total_sec: count + "秒",
-                        vc_total_sec_hour: Math.floor(count / 3600) + "時間" + Math.floor(count % 3600 / 60) + "分",
+                        vc_total_sec: sec_str,
                         discord_avatar: user.discord_avatar,
                         vc_last_join_time: user.vc_last_join_time,
                         vc_last_leave_time: user.vc_last_leave_time,
                     };
                 } else if (joinTime.getTime() < leaveTime.getTime()) {
+                    let sec_str = "";
+                    if ((user.vc_total_sec ?? 0) >= 604800) {
+                        sec_str = ( '00' + Math.floor((user.vc_total_sec ?? 0) / 604800)).slice(-2) + "週";
+                    }
+                    if ((user.vc_total_sec ?? 0) >= 86400) {
+                        sec_str += ( '0' + Math.floor((user.vc_total_sec ?? 0) / 86400)).slice(-1) + "日";
+                    }
+                    if ((user.vc_total_sec ?? 0) >= 3600) {
+                        sec_str += ( '00' + Math.floor((user.vc_total_sec ?? 0) % 86400 / 3600)).slice(-2) + "時間";
+                    }
+                    if ((user.vc_total_sec ?? 0) >= 60) {
+                        sec_str += ( '00' + Math.floor((user.vc_total_sec ?? 0) % 3600 / 60)).slice(-2) + "分";
+                    }
+                    sec_str += ( '00' + Math.floor((user.vc_total_sec ?? 0) % 60)).slice(-2) + "秒";
+
                     return {
                         discord_name: user.discord_name,
-                        vc_total_sec: (user.vc_total_sec ?? 0) + "秒",
-                        vc_total_sec_hour: Math.floor((user.vc_total_sec ?? 0) / 3600) + "時間" + Math.floor((user.vc_total_sec ?? 0) % 3600 / 60) + "分",
+                        vc_total_sec: sec_str,
                         discord_avatar: user.discord_avatar,
                         vc_last_join_time: user.vc_last_join_time,
                         vc_last_leave_time: user.vc_last_leave_time,
@@ -70,7 +95,6 @@ export default function RankTable({
                 return {
                     discord_name: user.discord_name,
                     vc_total_sec: "データなし",
-                    vc_total_sec_hour: "データなし",
                     discord_avatar: user.discord_avatar,
                     vc_last_join_time: user.vc_last_join_time,
                     vc_last_leave_time: user.vc_last_leave_time,
@@ -78,7 +102,7 @@ export default function RankTable({
             });
 
             dataNowTimeSet(dataNowTime);
-        }, 1000);
+        }, 500);
 
         return () => clearInterval(interval);
     }, [data]);
@@ -89,8 +113,7 @@ export default function RankTable({
                 <Table.Tr>
                     <Table.Th>#</Table.Th>
                     <Table.Th>名前</Table.Th>
-                    <Table.Th>累計VC参加秒数</Table.Th>
-                    <Table.Th>(時間換算)</Table.Th>
+                    <Table.Th style={{ textAlign: "right" }}>累計VC参加時間</Table.Th>
                 </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -114,8 +137,7 @@ export default function RankTable({
                                 {user.discord_name}
                             </div>
                         </Table.Td>
-                        <Table.Td>{user.vc_total_sec}</Table.Td>
-                        <Table.Td>{user.vc_total_sec_hour}</Table.Td>
+                        <Table.Td style={{ textAlign: "right" }}>{user.vc_total_sec}</Table.Td>
                     </Table.Tr>
                 ))}
             </Table.Tbody>
