@@ -70,10 +70,10 @@ export default function RankTable({
                 } else if (joinTime.getTime() < leaveTime.getTime()) {
                     let sec_str = "";
                     if ((user.vc_total_sec ?? 0) >= 604800) {
-                        sec_str = ( '00' + Math.floor((user.vc_total_sec ?? 0) / 604800)).slice(-2) + "週";
+                        sec_str = Math.floor((user.vc_total_sec ?? 0) / 604800) + "週";
                     }
                     if ((user.vc_total_sec ?? 0) >= 86400) {
-                        sec_str += ( '0' + Math.floor((user.vc_total_sec ?? 0) / 86400)).slice(-1) + "日";
+                        sec_str += ( '0' + Math.floor((user.vc_total_sec ?? 0) % 604800 / 86400)).slice(-1) + "日";
                     }
                     if ((user.vc_total_sec ?? 0) >= 3600) {
                         sec_str += ( '00' + Math.floor((user.vc_total_sec ?? 0) % 86400 / 3600)).slice(-2) + "時間";
