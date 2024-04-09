@@ -2,8 +2,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { Table } from "@mantine/core";
-import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function RankTable({
     data,
@@ -18,7 +17,8 @@ export default function RankTable({
     }) {
     const [dataNowTime, dataNowTimeSet] = useState<{
         discord_name: string | null;
-        vc_total_sec: string | null;
+        vc_total_sec: number | null;
+        vc_total_sec_string: string | null;
         discord_avatar: string | null;
         vc_last_join_time: Date | null;
         vc_last_leave_time: Date | null;
@@ -35,7 +35,8 @@ export default function RankTable({
                 if (!joinTime) {
                     return {
                         discord_name: isInVC ? user.discord_name + " (📢)" : user.discord_name,
-                        vc_total_sec: "データなし",
+                        vc_total_sec: 0,
+                        vc_total_sec_string: "データなし",
                         discord_avatar: user.discord_avatar,
                         vc_last_join_time: user.vc_last_join_time,
                         vc_last_leave_time: user.vc_last_leave_time,
@@ -62,7 +63,8 @@ export default function RankTable({
                     sec_str += ( '00' + Math.floor(count % 60)).slice(-2) + "秒";
                     return {
                         discord_name: isInVC ? user.discord_name + " (📢)" : user.discord_name,
-                        vc_total_sec: sec_str,
+                        vc_total_sec: count,
+                        vc_total_sec_string: sec_str,
                         discord_avatar: user.discord_avatar,
                         vc_last_join_time: user.vc_last_join_time,
                         vc_last_leave_time: user.vc_last_leave_time,
@@ -85,7 +87,8 @@ export default function RankTable({
 
                     return {
                         discord_name: user.discord_name,
-                        vc_total_sec: sec_str,
+                        vc_total_sec: user.vc_total_sec ?? 0,
+                        vc_total_sec_string: sec_str,
                         discord_avatar: user.discord_avatar,
                         vc_last_join_time: user.vc_last_join_time,
                         vc_last_leave_time: user.vc_last_leave_time,
@@ -94,7 +97,8 @@ export default function RankTable({
 
                 return {
                     discord_name: user.discord_name,
-                    vc_total_sec: "データなし",
+                    vc_total_sec: 0,
+                    vc_total_sec_string: "データなし",
                     discord_avatar: user.discord_avatar,
                     vc_last_join_time: user.vc_last_join_time,
                     vc_last_leave_time: user.vc_last_leave_time,
@@ -119,7 +123,7 @@ export default function RankTable({
             <Table.Tbody>
                 {dataNowTime.sort((a, b) => {
                     if (a.vc_total_sec && b.vc_total_sec) {
-                        return Number(b.vc_total_sec.replace('秒', '')) - Number(a.vc_total_sec.replace('秒', ''));
+                        return b.vc_total_sec - a.vc_total_sec;
                     }
                     return 0;
                 }).map((user, index) => (
@@ -137,7 +141,7 @@ export default function RankTable({
                                 {user.discord_name}
                             </div>
                         </Table.Td>
-                        <Table.Td style={{ textAlign: "right" }}>{user.vc_total_sec}</Table.Td>
+                        <Table.Td style={{ textAlign: "right" }}>{user.vc_total_sec_string}</Table.Td>
                     </Table.Tr>
                 ))}
             </Table.Tbody>
