@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import { Switch, Table } from "@mantine/core";
+import { Select, Switch, Table } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 export default function RankTable({
@@ -27,6 +27,7 @@ export default function RankTable({
     }[]>([]);
 
     const [isShowTotalSecPerJoin, setIsShowTotalSecPerJoin] = useState(false);
+    const [sortKey, setSortKey] = useState<"total_sec" | "total_sec_per_join">("total_sec");
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -122,7 +123,22 @@ export default function RankTable({
 
     return (
         <>
-            <Switch label="VC参加時間/サーバー参加からの時間 を表示" onChange={e => setIsShowTotalSecPerJoin(e.currentTarget.checked)} />
+            <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", flexDirection: "row", alignItems: "center" }}>
+                    <Switch label="VC参加時間/サーバー参加からの時間 を表示" onChange={e => setIsShowTotalSecPerJoin(e.currentTarget.checked)} />
+                    <p style={{ color: "#b11b1b", fontSize: ".8rem" }}>(激重注意！)</p>
+                </div>
+                {isShowTotalSecPerJoin && (
+                    <Select
+                        data={[
+                            { value: "total_sec", label: "累計VC参加時間" },
+                            { value: "total_sec_per_join", label: "VC参加時間/サーバー参加からの時間" },
+                        ]}
+                        defaultValue={"total_sec"}
+                        onChange={e => setSortKey((e ?? "total_sec") as "total_sec" | "total_sec_per_join")}
+                    />
+                )}
+            </div>
             <Table>
                 <Table.Thead>
                     <Table.Tr>
@@ -136,10 +152,16 @@ export default function RankTable({
                 </Table.Thead>
                 <Table.Tbody>
                     {dataNowTime.sort((a, b) => {
-                        if (a.vc_total_sec && b.vc_total_sec) {
-                            return b.vc_total_sec - a.vc_total_sec;
+                        if (sortKey === "total_sec_per_join" && isShowTotalSecPerJoin) {
+                            return (b.vc_total_sec_per_join ?? 0) - (a.vc_total_sec_per_join ?? 0);
+                        } else if (sortKey === "total_sec") {
+                            if (a.vc_total_sec && b.vc_total_sec) {
+                                return b.vc_total_sec - a.vc_total_sec;
+                            }
+                            return 0;
+                        } else {
+                            return 0;
                         }
-                        return 0;
                     }).map((user, index) => (
                         <Table.Tr key={index}>
                             <Table.Td>{index + 1}</Table.Td>
