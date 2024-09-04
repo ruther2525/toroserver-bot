@@ -25,6 +25,8 @@ model User {
   vc_last_leave_time DateTime?
 
   vc_total_sec Int?
+
+  guild_joined_date DateTime?
 }
 
 model VCChannel {

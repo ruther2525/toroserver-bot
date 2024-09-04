@@ -1,11 +1,11 @@
-import prisma from "@/prisma";
+import prisma from "../prisma";
 import { Client } from "discord.js";
 
 const VCChannels = [];
 
 export const VC = (client: Client) => {
     client.on('channelCreate', async (channel) => {
-        if (channel?.isVoiceBased()) {
+        if (channel?.isVoiceBased() && channel?.parentId !== process.env.AUTO_VC_CATEGORY_ID) {
             console.log(`${channel.name} has been created.`);
             VCChannels.push(channel);
 
@@ -17,6 +17,8 @@ export const VC = (client: Client) => {
                 }
             });
         }
+
+        if (channel?.parentId === process.env.AUTO_VC_CATEGORY_ID) console.log(`${channel.name} has been created in the auto vc category.`);
     });
 
     client.on('voiceStateUpdate', async (oldState, newState) => {
@@ -114,7 +116,8 @@ export const VC = (client: Client) => {
                         discord_name: newState.member?.user.tag + (newState.member?.user.bot ? ' [BOT]' : ''),
                         discord_avatar: newState.member?.user.avatarURL() ?? null,
                         vc_last_join_time: new Date(),
-                        vc_last_join_channel: newState.channelId
+                        vc_last_join_channel: newState.channelId,
+                        guild_joined_date: newState.member?.joinedAt ?? null,
                     }
                 });
 
@@ -127,7 +130,8 @@ export const VC = (client: Client) => {
                         discord_name: newState.member.user.tag + (newState.member.user.bot ? ' [BOT]' : ''),
                         discord_avatar: newState.member.user.avatarURL() ?? null,
                         vc_last_join_time: new Date(),
-                        vc_last_join_channel: newState.channelId
+                        vc_last_join_channel: newState.channelId,
+                        guild_joined_date: newState.member.joinedAt ?? null,
                     }
                 });
                 console.log(`- User ${newState.member?.user.tag} is not in the database.`);
@@ -147,7 +151,8 @@ export const VC = (client: Client) => {
                         discord_name: oldState.member?.user.tag + (oldState.member?.user.bot ? ' [BOT]' : ''),
                         discord_avatar: oldState.member?.user.avatarURL() ?? null,
                         vc_last_leave_time: new Date(),
-                        vc_total_sec: (_user.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - _user.vc_last_join_time.getTime()) / 1000)
+                        vc_total_sec: (_user.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - _user.vc_last_join_time.getTime()) / 1000),
+                        guild_joined_date: oldState.member?.joinedAt ?? null,
                     }
                 });
             }
@@ -165,6 +170,7 @@ export const VC = (client: Client) => {
                         discord_name: newState.member?.user.tag + (newState.member?.user.bot ? ' [BOT]' : ''),
                         discord_avatar: newState.member?.user.avatarURL() ?? null,
                         vc_last_join_channel: newState.channelId,
+                        guild_joined_date: newState.member?.joinedAt ?? null,
                     }
                 });
             }
@@ -211,6 +217,15 @@ export const VC = (client: Client) => {
         const channels = await guild.channels.fetch();
 
         const joinnedUser: string[] = [];
+
+        channels.forEach(channel => {
+            if (channel?.isVoiceBased()) {
+                channel.members.forEach(member => {
+                    joinnedUser.push(member.id);
+                });
+            }
+        });
+
         channels.forEach(async channel => {
             if (channel?.isVoiceBased()) {
                 VCChannels.push(channel);
@@ -322,9 +337,10 @@ export const VC = (client: Client) => {
                                         discord_name: member.user.tag + (member.user.bot ? ' [BOT]' : ''),
                                         discord_avatar: member.user.avatarURL() ?? null,
                                         vc_last_join_time: new Date(),
+                                        guild_joined_date: member.joinedAt ?? null,
                                     }
                                 });
-                            // 2. ユーザーが最後に参加したチャンネルが現在のチャンネルと異なる場合、退席処理の後入室処理をする
+                                // 2. ユーザーが最後に参加したチャンネルが現在のチャンネルと異なる場合、退席処理の後入室処理をする
                             } else if (
                                 _user.vc_last_join_time && _user.vc_last_leave_time
                                 && _user.vc_last_join_time < new Date()
@@ -342,10 +358,11 @@ export const VC = (client: Client) => {
                                         vc_last_join_channel: channel.id,
                                         vc_last_leave_time: new Date(Date.now() - 1000),
                                         vc_total_sec: (_user.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - _user.vc_last_join_time.getTime()) / 1000),
+                                        guild_joined_date: member.joinedAt ?? null,
                                     }
                                 });
                             }
-                            // VCに入っているのにデータベースにない場合、データベースに追加
+                        // VCに入っているのにデータベースにない場合、データベースに追加
                         } else {
                             await prisma.user.create({
                                 data: {
@@ -354,6 +371,7 @@ export const VC = (client: Client) => {
                                     discord_avatar: member.user.avatarURL() ?? null,
                                     vc_last_join_time: new Date(),
                                     vc_last_join_channel: channel.id,
+                                    guild_joined_date: member.joinedAt ?? null,
                                 }
                             });
                             console.log(`- ${member.user.tag} is not in the database.`);
@@ -365,6 +383,7 @@ export const VC = (client: Client) => {
             }
         });
 
+        console.log(joinnedUser)
 
         // 3. ユーザーが最後に退出した時間よりも最後に参加した時間が新しいのに、VCに参加していない場合、最後に退出した時間を現在の時間にセット
         dbUser.forEach(async user => {
@@ -384,7 +403,7 @@ export const VC = (client: Client) => {
                     },
                     data: {
                         vc_last_leave_time: new Date(),
-                        vc_total_sec: (user.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - user.vc_last_join_time.getTime()) / 1000)
+                        vc_total_sec: (user.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - user.vc_last_join_time.getTime()) / 1000),
                     }
                 });
             }

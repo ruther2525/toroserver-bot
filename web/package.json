@@ -17,7 +17,8 @@
     "next-auth": "^4.24.7",
     "prisma": "^5.11.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "toroserver-bot": "file:"
   },
   "devDependencies": {
     "@types/node": "^20",

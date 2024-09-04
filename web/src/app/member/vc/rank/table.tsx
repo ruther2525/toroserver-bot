@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
 "use client";
-import { Table } from "@mantine/core";
+import { Switch, Table } from "@mantine/core";
 import { useEffect, useState } from "react";
 
 export default function RankTable({
@@ -13,16 +13,20 @@ export default function RankTable({
         discord_avatar: string | null;
         vc_last_join_time: Date | null;
         vc_last_leave_time: Date | null;
+        guild_joined_date: Date | null;
     }[];
-    }) {
+}) {
     const [dataNowTime, dataNowTimeSet] = useState<{
         discord_name: string | null;
         vc_total_sec: number | null;
         vc_total_sec_string: string | null;
+        vc_total_sec_per_join: number | null;
         discord_avatar: string | null;
         vc_last_join_time: Date | null;
         vc_last_leave_time: Date | null;
     }[]>([]);
+
+    const [isShowTotalSecPerJoin, setIsShowTotalSecPerJoin] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -37,6 +41,7 @@ export default function RankTable({
                         discord_name: isInVC ? user.discord_name + " (📢)" : user.discord_name,
                         vc_total_sec: 0,
                         vc_total_sec_string: "データなし",
+                        vc_total_sec_per_join: null,
                         discord_avatar: user.discord_avatar,
                         vc_last_join_time: user.vc_last_join_time,
                         vc_last_leave_time: user.vc_last_leave_time,
@@ -61,10 +66,12 @@ export default function RankTable({
                         sec_str += ( '00' + Math.floor(count % 3600 / 60)).slice(-2) + "分";
                     }
                     sec_str += ( '00' + Math.floor(count % 60)).slice(-2) + "秒";
+                    
                     return {
                         discord_name: isInVC ? user.discord_name + " (📢)" : user.discord_name,
                         vc_total_sec: count,
                         vc_total_sec_string: sec_str,
+                        vc_total_sec_per_join: isShowTotalSecPerJoin && user.guild_joined_date ? count / ((nowTime.getTime() - user.guild_joined_date.getTime()) / 1000) : null,
                         discord_avatar: user.discord_avatar,
                         vc_last_join_time: user.vc_last_join_time,
                         vc_last_leave_time: user.vc_last_leave_time,
@@ -89,6 +96,7 @@ export default function RankTable({
                         discord_name: user.discord_name,
                         vc_total_sec: user.vc_total_sec ?? 0,
                         vc_total_sec_string: sec_str,
+                        vc_total_sec_per_join: isShowTotalSecPerJoin && user.guild_joined_date ? (user.vc_total_sec ?? 0) / ((nowTime.getTime() - user.guild_joined_date.getTime()) / 1000) : null,
                         discord_avatar: user.discord_avatar,
                         vc_last_join_time: user.vc_last_join_time,
                         vc_last_leave_time: user.vc_last_leave_time,
@@ -99,6 +107,7 @@ export default function RankTable({
                     discord_name: user.discord_name,
                     vc_total_sec: 0,
                     vc_total_sec_string: "データなし",
+                    vc_total_sec_per_join: null,
                     discord_avatar: user.discord_avatar,
                     vc_last_join_time: user.vc_last_join_time,
                     vc_last_leave_time: user.vc_last_leave_time,
@@ -109,42 +118,53 @@ export default function RankTable({
         }, 500);
 
         return () => clearInterval(interval);
-    }, [data]);
+    }, [data, isShowTotalSecPerJoin]);
 
     return (
-        <Table>
-            <Table.Thead>
-                <Table.Tr>
-                    <Table.Th>#</Table.Th>
-                    <Table.Th>名前</Table.Th>
-                    <Table.Th style={{ textAlign: "right" }}>累計VC参加時間</Table.Th>
-                </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-                {dataNowTime.sort((a, b) => {
-                    if (a.vc_total_sec && b.vc_total_sec) {
-                        return b.vc_total_sec - a.vc_total_sec;
-                    }
-                    return 0;
-                }).map((user, index) => (
-                    <Table.Tr key={index}>
-                        <Table.Td>{index + 1}</Table.Td>
-                        <Table.Td>
-                            <div style={{
-                                display: "flex",
-                                alignItems: "center",
-                            }}>
-                                <img src={user.discord_avatar ?? ""} alt={user.discord_name + "'s icon"} width={20} height={20} onError={e => {
-                                    e.currentTarget.src = "/toroserver-icon.png";
-                                    e.currentTarget.onerror = null;
-                                }} />
-                                {user.discord_name}
-                            </div>
-                        </Table.Td>
-                        <Table.Td style={{ textAlign: "right" }}>{user.vc_total_sec_string}</Table.Td>
+        <>
+            <Switch label="VC参加時間/サーバー参加からの時間 を表示" onChange={e => setIsShowTotalSecPerJoin(e.currentTarget.checked)} />
+            <Table>
+                <Table.Thead>
+                    <Table.Tr>
+                        <Table.Th>#</Table.Th>
+                        <Table.Th>名前</Table.Th>
+                        <Table.Th style={{ textAlign: "right" }}>累計VC参加時間</Table.Th>
+                        {isShowTotalSecPerJoin && (
+                            <Table.Th>TotalSec per Join</Table.Th>
+                        )}
                     </Table.Tr>
-                ))}
-            </Table.Tbody>
-        </Table>
+                </Table.Thead>
+                <Table.Tbody>
+                    {dataNowTime.sort((a, b) => {
+                        if (a.vc_total_sec && b.vc_total_sec) {
+                            return b.vc_total_sec - a.vc_total_sec;
+                        }
+                        return 0;
+                    }).map((user, index) => (
+                        <Table.Tr key={index}>
+                            <Table.Td>{index + 1}</Table.Td>
+                            <Table.Td>
+                                <div style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                }}>
+                                    <img src={user.discord_avatar ?? ""} alt={user.discord_name + "'s icon"} width={20} height={20} onError={e => {
+                                        e.currentTarget.src = "/toroserver-icon.png";
+                                        e.currentTarget.onerror = null;
+                                    } } />
+                                    {user.discord_name}
+                                </div>
+                            </Table.Td>
+                            <Table.Td style={{ textAlign: "right" }}>{user.vc_total_sec_string}</Table.Td>
+                            {isShowTotalSecPerJoin && (
+                                <Table.Td>
+                                    {user.vc_total_sec_per_join}
+                                </Table.Td>
+                            )}
+                        </Table.Tr>
+                    ))}
+                </Table.Tbody>
+            </Table>
+        </>
     );
 }

@@ -1,6 +1,5 @@
 import { prisma } from "@/components/prisma";
 import RequireJoinGuild from "@/components/require_join_guild"
-import { Table } from "@mantine/core";
 import RankTable from "./table";
 
 export const revalidate = 10;
@@ -14,6 +13,7 @@ export default async function RankPage() {
             vc_last_join_time: true,
             vc_last_leave_time: true,
             vc_total_sec: true,
+            guild_joined_date: true,
         },
         orderBy: {
             vc_total_sec: "desc",
