@@ -31,8 +31,8 @@ export default function RankTable({
 
     useEffect(() => {
         const interval = setInterval(() => {
+            const nowTime = new Date();
             const dataNowTime = data.map((user, index) => {
-                const nowTime = new Date();
                 const joinTime = user.vc_last_join_time;
                 const leaveTime = user.vc_last_leave_time;
                 const isInVC = joinTime && (!leaveTime || joinTime.getTime() > leaveTime.getTime());
