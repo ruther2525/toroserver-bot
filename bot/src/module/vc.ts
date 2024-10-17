@@ -101,6 +101,40 @@ export const VC = (client: Client) => {
         }
 
 
+
+        if (_user) {
+            if (!_user?.discord_name || _user?.discord_name !== newState.member?.user.tag + (newState.member?.user.bot ? ' [BOT]' : '')) {
+                await prisma.user.update({
+                    where: {
+                        discord_id: _user.discord_id
+                    },
+                    data: {
+                        discord_name: newState.member?.user.tag + (newState.member?.user.bot ? ' [BOT]' : ''),
+                    }
+                });
+            }
+            if (!_user?.guild_joined_date) {
+                await prisma.user.update({
+                    where: {
+                        discord_id: _user.discord_id
+                    },
+                    data: {
+                        guild_joined_date: newState.member?.joinedAt ?? null,
+                    }
+                });
+            }
+            if (!_user?.discord_avatar || _user?.discord_avatar !== newState.member?.user.avatarURL()) {
+                await prisma.user.update({
+                    where: {
+                        discord_id: _user.discord_id
+                    },
+                    data: {
+                        discord_avatar: newState.member?.user.avatarURL() ?? null,
+                    }
+                });
+            }
+        }
+
         // チャンネル参加
         if (oldState.channelId === null && newState.channelId !== null) {
             console.log(`${newState.member?.user.tag} joined ${newState.channel?.name}`);
@@ -113,11 +147,8 @@ export const VC = (client: Client) => {
                         discord_id: _user.discord_id
                     },
                     data: {
-                        discord_name: newState.member?.user.tag + (newState.member?.user.bot ? ' [BOT]' : ''),
-                        discord_avatar: newState.member?.user.avatarURL() ?? null,
                         vc_last_join_time: new Date(),
                         vc_last_join_channel: newState.channelId,
-                        guild_joined_date: newState.member?.joinedAt ?? null,
                     }
                 });
 
@@ -149,10 +180,8 @@ export const VC = (client: Client) => {
                     },
                     data: {
                         discord_name: oldState.member?.user.tag + (oldState.member?.user.bot ? ' [BOT]' : ''),
-                        discord_avatar: oldState.member?.user.avatarURL() ?? null,
                         vc_last_leave_time: new Date(),
                         vc_total_sec: (_user.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - _user.vc_last_join_time.getTime()) / 1000),
-                        guild_joined_date: oldState.member?.joinedAt ?? null,
                     }
                 });
             }
@@ -170,7 +199,6 @@ export const VC = (client: Client) => {
                         discord_name: newState.member?.user.tag + (newState.member?.user.bot ? ' [BOT]' : ''),
                         discord_avatar: newState.member?.user.avatarURL() ?? null,
                         vc_last_join_channel: newState.channelId,
-                        guild_joined_date: newState.member?.joinedAt ?? null,
                     }
                 });
             }
@@ -334,10 +362,7 @@ export const VC = (client: Client) => {
                                         discord_id: _user.discord_id
                                     },
                                     data: {
-                                        discord_name: member.user.tag + (member.user.bot ? ' [BOT]' : ''),
-                                        discord_avatar: member.user.avatarURL() ?? null,
                                         vc_last_join_time: new Date(),
-                                        guild_joined_date: member.joinedAt ?? null,
                                     }
                                 });
                                 // 2. ユーザーが最後に参加したチャンネルが現在のチャンネルと異なる場合、退席処理の後入室処理をする
@@ -352,13 +377,10 @@ export const VC = (client: Client) => {
                                         discord_id: _user.discord_id
                                     },
                                     data: {
-                                        discord_name: member.user.tag + (member.user.bot ? ' [BOT]' : ''),
-                                        discord_avatar: member.user.avatarURL() ?? null,
                                         vc_last_join_time: new Date(),
                                         vc_last_join_channel: channel.id,
                                         vc_last_leave_time: new Date(Date.now() - 1000),
                                         vc_total_sec: (_user.vc_total_sec ?? 0) + Math.floor((new Date().getTime() - _user.vc_last_join_time.getTime()) / 1000),
-                                        guild_joined_date: member.joinedAt ?? null,
                                     }
                                 });
                             }
