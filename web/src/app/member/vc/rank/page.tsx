@@ -1,11 +1,17 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/auth/options";
 import { prisma } from "@/components/prisma";
-import RequireJoinGuild from "@/components/require_join_guild"
+import RequireJoinGuild from "@/components/require_join_guild";
 import RankTable from "./table";
 
-export const revalidate = 10;
 export const dynamic = 'force-dynamic';
 
 export default async function RankPage() {
+    const session = await getServerSession(authOptions);
+    if (session?.guildAccess !== "member") {
+        return <RequireJoinGuild access={session?.guildAccess} />;
+    }
+
     const data = await prisma.user.findMany({
         select: {
             discord_avatar: true,
@@ -20,24 +26,11 @@ export default async function RankPage() {
         },
     });
 
-    if (!data) {
-        return (
-            <RequireJoinGuild>
-                <main>
-                    <h1>とろサーのVC参加時間一覧</h1>
-                    <p>データがありません</p>
-                </main>
-            </RequireJoinGuild>
-        );
-    }
-
     return (
-        <RequireJoinGuild>
-            <main>
-                <h1>とろサーのVC参加時間一覧</h1>
+        <main>
+            <h1>とろサーのVC参加時間一覧</h1>
 
-                <RankTable data={data} />
-            </main>
-        </RequireJoinGuild>
+            <RankTable data={data} />
+        </main>
     );
 }

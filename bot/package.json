@@ -4,7 +4,7 @@
   "description": "toroserver's management bot",
   "main": "index.js",
   "scripts": {
-    "lint": "eslint src/**/*.ts",
+    "lint": "eslint src",
     "test": "ts-node src/main.ts",
     "register": "ts-node src/commands/_register.ts",
     "start": "node build/main.js",
@@ -21,19 +21,21 @@
   },
   "homepage": "https://github.com/ruther2525/toroserver-bot#readme",
   "dependencies": {
-    "@prisma/client": "^5.11.0",
-    "discord.js": "^14.12.1",
-    "dotenv": "^16.4.5",
-    "prisma": "^5.11.0",
-    "toroserver-bot": "file:",
+    "@prisma/client": "~6.19.0",
+    "discord.js": "^14.28.1",
+    "dotenv": "^18.0.10",
+    "prisma": "~6.19.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.4.2",
-    "typescript-transform-paths": "^3.4.7"
+    "typescript": "^5.9.3",
+    "typescript-transform-paths": "^4.0.0"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^7.3.1",
-    "@typescript-eslint/parser": "^7.3.1",
-    "eslint": "^8.57.0"
+    "eslint": "^9.39.4",
+    "@types/node": "^22",
+    "typescript-eslint": "^8.73.0"
+  },
+  "engines": {
+    "node": "^22.11.0 || ^24.0.0"
   }
 }

@@ -8,12 +8,9 @@ import Link from "next/link";
 import Image from "next/image";
 
 
-const links = [
-    { title: "トップ", href: "/", requireLogin: false },
-    { title: "ログイン", handler: async () => { await signIn("discord"); }, requireLogin: false },
-    { title: "ログアウト", handler: async () => { await signOut(); }, requireLogin: true },
-    { title: "VC接続時間", href: "/member/vc/rank", requireLogin: true },
-    { title: "最大同時接続数", href: "/member/vc/channel", requireLogin: true },
+const memberLinks = [
+    { title: "VC接続時間", href: "/member/vc/rank" },
+    { title: "最大同時接続数", href: "/member/vc/channel" },
 ];
 
 export default function AppShellNavBar({
@@ -24,8 +21,31 @@ export default function AppShellNavBar({
     const [mobileMenuOpened, { toggle }] = useDisclosure();
 
     const { data: session, status } = useSession();
-    if (status === "authenticated") {
-        console.log(session);
+    const needsLogin = status === "unauthenticated" || session?.guildAccess === "reauthenticate";
+
+    function navigation(onSelect?: () => void) {
+        return (
+            <>
+                <UnstyledButton component={Link} href="/" onClick={onSelect} className={styles.control}>
+                    トップ
+                </UnstyledButton>
+                {session?.guildAccess === "member" && memberLinks.map(link => (
+                    <UnstyledButton key={link.href} component={Link} href={link.href} onClick={onSelect} className={styles.control}>
+                        {link.title}
+                    </UnstyledButton>
+                ))}
+                {needsLogin && (
+                    <UnstyledButton className={styles.control} onClick={() => { onSelect?.(); void signIn("discord"); }}>
+                        ログイン
+                    </UnstyledButton>
+                )}
+                {status === "authenticated" && (
+                    <UnstyledButton className={styles.control} onClick={() => { onSelect?.(); void signOut({ callbackUrl: "/" }); }}>
+                        ログアウト
+                    </UnstyledButton>
+                )}
+            </>
+        );
     }
 
     return (
@@ -60,52 +80,14 @@ export default function AppShellNavBar({
                             {status === "loading" ? <>
                                 <Skeleton height={30} width={80} />
                                 <Skeleton height={30} width={110} mr={20} />
-                            </> : links.map((link) => {
-                                if (link.requireLogin) {
-                                    if (status === "authenticated" && session.user.guilds?.length > 0 && session.user.guilds.some((guild: { id: string; }) => guild.id === process.env.NEXT_PUBLIC_GUILD_ID)) {
-                                        return link.handler ?
-                                            <UnstyledButton key={link.title} onClick={link.handler} className={styles.control}>{link.title}</UnstyledButton>
-                                            : <UnstyledButton key={link.title} href={link.href} component={Link} className={styles.control}>{link.title}</UnstyledButton>;
-                                    } else {
-                                        return null;
-                                    }
-                                } else {
-                                    if (status === "authenticated" && session.user.guilds?.length > 0 && session.user.guilds.some((guild: { id: string; }) => guild.id === process.env.NEXT_PUBLIC_GUILD_ID)) {
-                                        return null;
-                                    } else {
-                                        return link.handler ?
-                                            <UnstyledButton key={link.title} onClick={link.handler} className={styles.control}>{link.title}</UnstyledButton>
-                                            : <UnstyledButton key={link.title} href={link.href} component={Link} className={styles.control}>{link.title}</UnstyledButton>;
-                                    }
-                                }
-                            })}
+                            </> : navigation()}
                         </Group>
                     </Group>
                 </Group>
             </AppShell.Header>
 
             <AppShell.Navbar py="md" px={4}>
-                {status === "loading" ? <LoadingOverlay visible zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} /> : <>
-                    {links.map((link) => {
-                        if (link.requireLogin) {
-                            if (status === "authenticated" && session.user.guilds?.length > 0 && session.user.guilds.some((guild: { id: string; }) => guild.id === process.env.NEXT_PUBLIC_GUILD_ID)) {
-                                return link.handler ?
-                                    <UnstyledButton key={link.title} onClick={() => { toggle(); link.handler(); }} className={styles.control}>{link.title}</UnstyledButton>
-                                    : <UnstyledButton key={link.title} onClick={toggle} href={link.href} component={Link} className={styles.control}>{link.title}</UnstyledButton>;
-                            } else {
-                                return null;
-                            }
-                        } else {
-                            if (status === "authenticated" && session.user.guilds?.length > 0 && session.user.guilds.some((guild: { id: string; }) => guild.id === process.env.NEXT_PUBLIC_GUILD_ID)) {
-                                return null;
-                            } else {
-                                return link.handler ?
-                                    <UnstyledButton key={link.title} onClick={() => { toggle(); link.handler(); }} className={styles.control}>{link.title}</UnstyledButton>
-                                    : <UnstyledButton key={link.title} onClick={toggle} href={link.href} component={Link} className={styles.control}>{link.title}</UnstyledButton>;
-                            }
-                        }
-                    })}
-                </>}
+                {status === "loading" ? <LoadingOverlay visible zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} /> : navigation(toggle)}
             </AppShell.Navbar>
 
             <AppShell.Main>

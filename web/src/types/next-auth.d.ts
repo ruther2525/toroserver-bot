@@ -1,45 +1,20 @@
-import NextAuth, { DefaultSession } from "next-auth";
+import "next-auth";
+import "next-auth/jwt";
+
+interface DiscordCredentials {
+    access_token?: string;
+    expires_at?: number;
+}
 
 declare module "next-auth" {
     interface Session {
-        user: {
-            name: string;
-            display_name: string;
-            email: string;
-            image: string;
-            access_token: string;
-            guilds: any[];
-        } & DefaultSession["user"];
-    }
-    interface Account {
-        access_token: string;
-        global_name: string;
-        provider: string;
-        type: string;
-        providerAccountId: string;
-        token_type: string;
-        access_token: string;
-        expires_at: nunber;
-        refresh_token: string;
-        scope: string;
-        guilds: any[];
+        guildAccess: "member" | "nonmember" | "reauthenticate" | "unavailable";
     }
 }
 
 declare module "next-auth/jwt" {
     interface JWT {
-        account?: {
-            access_token: string;
-            global_name: string;
-            provider: string;
-            type: string;
-            providerAccountId: string;
-            token_type: string;
-            access_token: string;
-            expires_at: nunber;
-            refresh_token: string;
-            scope: string;
-            guilds: any[];
-        }
+        discord?: DiscordCredentials;
+        account?: DiscordCredentials;
     }
 }

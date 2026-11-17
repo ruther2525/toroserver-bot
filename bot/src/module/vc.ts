@@ -235,7 +235,7 @@ export const VC = (client: Client) => {
         }
     });
 
-    client.on('ready', async () => {
+    client.on('clientReady', async () => {
         const dbUser = await prisma.user.findMany();
 
         const guild = await client.guilds.fetch(process.env.GUILD_ID ?? '');

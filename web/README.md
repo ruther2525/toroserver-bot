@@ -2,6 +2,12 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Getting Started
 
+Use Node.js 22.11+ (22.x) or Node.js 24.
+
+Set `CLIENT_ID`, `CLIENT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `NEXT_PUBLIC_GUILD_ID`, `DATABASE_URL`, and `SHADOW_DATABASE_URL` in the web app's environment. Register `<NEXTAUTH_URL>/api/auth/callback/discord` as the redirect URI in the Discord Developer Portal.
+
+Install dependencies with `npm ci` or `pnpm install --frozen-lockfile` (pnpm 11). The existing postinstall script generates the Prisma client and pushes the schema to the configured database.
+
 First, run the development server:
 
 ```bash

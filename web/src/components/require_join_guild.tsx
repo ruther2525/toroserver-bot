@@ -1,43 +1,29 @@
 "use client";
 
-import { Button, Center, LoadingOverlay, Space } from "@mantine/core";
-import { signIn, useSession } from "next-auth/react";
-import Link from "next/link";
+import { Button, Stack } from "@mantine/core";
+import type { Session } from "next-auth";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
-export default function RequireJoinGuild({
-    children,
-}: Readonly<{
-    children: React.ReactNode;
-}>) {
-    const { data: session, status } = useSession();
-    
-    if (status === "loading") {
-        return (
-            <>
-                <LoadingOverlay visible zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
-                {children}
-            </>
-        )
-    } else if (status === "authenticated" && session.user.guilds?.length > 0 && session.user.guilds.some((guild: { id: string; }) => guild.id === process.env.NEXT_PUBLIC_GUILD_ID)) {
-        return children;
-    } else {
-        return (
-            <div style={{
-                width: "100%",
-                height: "80vh",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-            }}>
-                <h1>このページを表示するにはとろサーに参加している必要があります。</h1>
-                {status === "unauthenticated" && <>
-                    <Space h="xl" />
-                    <Button onClick={async () => {
-                        await signIn("discord", { callbackUrl: window.location.href });
-                    }} color="blue" size="lg">ログイン</Button>
-                </>}
-            </div>
-        );
-    }
+export default function RequireJoinGuild({ access }: { access?: Session["guildAccess"] }) {
+    const router = useRouter();
+    const needsLogin = !access || access === "reauthenticate";
+
+    const message = needsLogin ? "Discordでログインしてください。"
+        : access === "unavailable" ? "Discordのメンバー確認に失敗しました。"
+        : "このページを表示するにはとろサーに参加している必要があります。";
+
+    return (
+        <Stack align="center" justify="center" mih="80vh">
+            <h1>{message}</h1>
+            {needsLogin && (
+                <Button onClick={() => signIn("discord", { callbackUrl: window.location.href })}>
+                    ログイン
+                </Button>
+            )}
+            {access === "unavailable" && (
+                <Button onClick={() => router.refresh()}>再試行</Button>
+            )}
+        </Stack>
+    );
 }

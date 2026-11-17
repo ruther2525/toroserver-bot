@@ -14,7 +14,7 @@ const client = new Client({
     partials: [],
 });
 
-client.once('ready', () => {
+client.once('clientReady', () => {
     console.log('✨Ready!');
 
     if (client.user) {

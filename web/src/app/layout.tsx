@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 import '@mantine/core/styles.css';
-import { ColorSchemeScript, MantineProvider } from "@mantine/core";
+import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from "@mantine/core";
 import AppShellNavBar from "@/components/appshell";
 import NextAuthProvider from "@/components/session";
 
@@ -18,7 +18,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="ja">
+        <html lang="ja" {...mantineHtmlProps}>
             <head>
                 <ColorSchemeScript />
             </head>

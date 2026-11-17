@@ -1,8 +1,6 @@
-/* eslint-disable jsx-a11y/alt-text */
-/* eslint-disable @next/next/no-img-element */
 "use client";
 import { Table } from "@mantine/core";
-import { VCChannel } from "@prisma/client";
+import type { VCChannel } from "@prisma/client";
 
 export default function RankTable({
     data,

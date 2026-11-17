@@ -1,4 +1,3 @@
-/* eslint-disable jsx-a11y/alt-text */
 /* eslint-disable @next/next/no-img-element */
 "use client";
 import { Select, Switch, Table } from "@mantine/core";
@@ -32,7 +31,7 @@ export default function RankTable({
     useEffect(() => {
         const interval = setInterval(() => {
             const nowTime = new Date();
-            const dataNowTime = data.map((user, index) => {
+            const dataNowTime = data.map(user => {
                 const joinTime = user.vc_last_join_time;
                 const leaveTime = user.vc_last_leave_time;
                 const isInVC = joinTime && (!leaveTime || joinTime.getTime() > leaveTime.getTime());
@@ -151,7 +150,7 @@ export default function RankTable({
                     </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                    {dataNowTime.sort((a, b) => {
+                    {[...dataNowTime].sort((a, b) => {
                         if (sortKey === "total_sec_per_join" && isShowTotalSecPerJoin) {
                             return (b.vc_total_sec_per_join ?? 0) - (a.vc_total_sec_per_join ?? 0);
                         } else if (sortKey === "total_sec") {
