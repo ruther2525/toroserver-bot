@@ -38,6 +38,7 @@ export const authOptions = {
         DiscordProvider({
             clientId: process.env.CLIENT_ID ?? "",
             clientSecret: process.env.CLIENT_SECRET ?? "",
+            issuer: "https://discord.com",
             authorization: { params: { scope: "identify email guilds" } },
             userinfo: "https://discord.com/api/v10/users/@me",
         }),
